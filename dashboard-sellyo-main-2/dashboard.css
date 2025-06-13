@@ -1,0 +1,99 @@
+body {
+  background: #111;
+  color: #fff;
+  font-family: 'Segoe UI', sans-serif;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 2rem;
+  background: #000;
+  border-bottom: 1px solid #333;
+}
+
+.logo {
+  height: 40px;
+}
+
+nav ul {
+  display: flex;
+  list-style: none;
+  gap: 1.5rem;
+  margin: 0;
+  padding: 0;
+}
+
+nav ul li a {
+  color: #fff;
+  text-decoration: none;
+  font-weight: 500;
+  transition: color 0.2s ease;
+}
+
+nav ul li a:hover {
+  color: #00ccff;
+}
+
+main {
+  padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+h1, h2 {
+  text-align: center;
+  margin-bottom: 1.5rem;
+}
+
+#create-tunnel-form {
+  background: #1a1a1a;
+  padding: 2rem;
+  border-radius: 10px;
+  max-width: 600px;
+  width: 100%;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+form label {
+  font-weight: 500;
+  display: block;
+  margin-top: 1rem;
+}
+
+form input[type="text"],
+form input[type="url"],
+form input[type="file"],
+form textarea,
+form select {
+  width: 100%;
+  padding: 0.8rem;
+  margin-top: 0.3rem;
+  border: none;
+  border-radius: 8px;
+  background: #222;
+  color: #fff;
+  font-size: 1rem;
+}
+
+form button {
+  margin-top: 2rem;
+  padding: 1rem;
+  width: 100%;
+  border: none;
+  border-radius: 8px;
+  background: #00ccff;
+  color: #000;
+  font-weight: bold;
+  font-size: 1.1rem;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+form button:hover {
+  background: #00aacc;
+}
