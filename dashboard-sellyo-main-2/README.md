@@ -1,3 +1,0 @@
-# Sellyo Dashboard
-
-Instructions pour lancer le projet...
