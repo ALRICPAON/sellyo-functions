@@ -1,0 +1,23 @@
+{
+  "headline": "Crée ton tunnel de vente en 3 minutes",
+  "createAccount": "Créer un compte",
+  "login": "Se connecter",
+  "features": [
+    {
+      "title": "Landing page instantanée",
+      "desc": "Crée une page professionnelle sans effort."
+    },
+    {
+      "title": "Script vidéo automatique",
+      "desc": "Un pitch IA prêt à vendre ton offre."
+    },
+    {
+      "title": "Emails automatisés",
+      "desc": "Séquences générées pour convertir tes prospects."
+    },
+    {
+      "title": "Paiement intégré",
+      "desc": "Encaisse facilement, tout est déjà connecté."
+    }
+  ]
+}
