@@ -1,7 +1,10 @@
 import { getStorage, ref, uploadBytesResumable, getDownloadURL } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
-import { app } from "./firebase-init.js";
 
+// 👉 Import Firebase DEV config
+import { app } from "./firebase-config-dev.js";
+
+// Initialisation des services
 const storage = getStorage(app);
 const auth = getAuth(app);
 
