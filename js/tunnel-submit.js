@@ -18,6 +18,7 @@ if (createBtn && formContainer && dashboardContent) {
   createBtn.addEventListener("click", () => {
     formContainer.style.display = "block";
     dashboardContent.innerHTML = "";
+    console.log("🧩 Formulaire affiché");
   });
 }
 
@@ -33,9 +34,14 @@ const form = document.getElementById("tunnel-form");
 if (form) {
   form.addEventListener("submit", async (e) => {
     e.preventDefault();
+    console.log("🚀 Soumission du formulaire détectée");
 
     const user = auth.currentUser;
-    if (!user) return alert("Utilisateur non connecté");
+    if (!user) {
+      alert("Utilisateur non connecté");
+      console.warn("❌ Utilisateur non connecté");
+      return;
+    }
 
     const name = document.getElementById("tunnel-name").value;
     const goal = document.getElementById("tunnel-goal").value;
@@ -56,10 +62,14 @@ if (form) {
 
     try {
       if (imageFile) {
+        console.log("📸 Upload image en cours...");
         coverUrl = await uploadCoverImage(imageFile, slug);
+        console.log("✅ Image uploadée :", coverUrl);
       }
       if (videoFile) {
+        console.log("🎥 Upload vidéo en cours...");
         videoUrl = await uploadCustomVideo(videoFile, slug);
+        console.log("✅ Vidéo uploadée :", videoUrl);
       }
 
       const tunnelData = {
@@ -77,11 +87,14 @@ if (form) {
         createdAt: new Date()
       };
 
-      // 🔐 Ajout dans Firestore
-      await addDoc(collection(db, "tunnels"), tunnelData);
+      console.log("🗂️ Données prêtes à être envoyées :", tunnelData);
 
-      // 🚀 Envoi des données vers Make pour génération auto
-      await fetch(makeWebhookURL, {
+      // 🔐 Ajout dans Firestore
+      const docRef = await addDoc(collection(db, "tunnels"), tunnelData);
+      console.log("✅ Tunnel ajouté dans Firestore, ID :", docRef.id);
+
+      // 🚀 Envoi des données vers Make
+      const makeResponse = await fetch(makeWebhookURL, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -90,12 +103,19 @@ if (form) {
         })
       });
 
+      if (makeResponse.ok) {
+        console.log("✅ Données envoyées à Make avec succès !");
+      } else {
+        console.warn("⚠️ Erreur HTTP lors de l'appel Make :", makeResponse.status);
+      }
+
       alert("✅ Tunnel enregistré et génération en cours !");
       form.reset();
       customDomainField.style.display = "none";
+
     } catch (err) {
-      console.error("Erreur enregistrement:", err);
-      alert("❌ Erreur lors de la sauvegarde du tunnel.");
+      console.error("❌ Erreur lors de la sauvegarde du tunnel :", err);
+      alert("❌ Une erreur s'est produite pendant la création du tunnel.");
     }
   });
 }
