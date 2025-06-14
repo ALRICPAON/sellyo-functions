@@ -1,3 +1,4 @@
+console.log("💡 Script tunnel-submit.js chargé !");
 // 🔁 On importe la config Firebase DEV
 import { app } from "./firebase-config-dev.js";
 import { getAuth } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
