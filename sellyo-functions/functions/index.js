@@ -8,13 +8,12 @@ const { MailerSend, EmailParams, Sender, Recipient, Attachment } = require("mail
 admin.initializeApp();
 const db = admin.firestore();
 
+// Utilisation sécurisée de la clé MailerSend via variable d'environnement
 const mailsend = new MailerSend({
-  apiKey: "mlsn.5effbc1ef58f113b69226968756449401104197a50e144410640772130e0c143",
+  apiKey: process.env.MAILERSEND_API_KEY || functions.config().mailersend.api_key,
 });
 
-
-
-// ✅ Fonction 1 : Envoi quand le statut passe à "ready"
+// Fonction 1 : Envoi quand le statut passe à "ready"
 exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
   const before = event.data.before.data();
   const after = event.data.after.data();
@@ -85,10 +84,9 @@ exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) =
       .setTo(to)
       .setSubject(subject)
       .setHtml(htmlContent)
-        .setReplyTo([{ email: replyToEmail, name: "Réponse client" }]);
+      .setReplyTo([{ email: replyToEmail, name: "Réponse client" }]);
 
-console.log("📬 Reply-To utilisé :", replyToEmail);
-
+    console.log("📬 Reply-To utilisé :", replyToEmail);
 
     const attachmentsList = [];
 
@@ -127,7 +125,7 @@ console.log("📬 Reply-To utilisé :", replyToEmail);
   }
 });
 
-// ✅ Fonction planifiée – vérifie chaque minute les mails à programmer
+// Fonction planifiée – vérifie chaque minute les mails à programmer
 exports.checkScheduledEmails = onSchedule("every 1 minutes", async (event) => {
   const now = new Date();
   const snapshot = await db.collection("emails")
@@ -150,8 +148,7 @@ exports.checkScheduledEmails = onSchedule("every 1 minutes", async (event) => {
   console.log(`✅ ${snapshot.size} email(s) mis à jour.`);
 });
 
-
-// ✅ Fonction ajoutée – détection de nouveau lead et intégration automatique dans workflow
+// Détection de nouveau lead et intégration automatique dans workflow
 exports.handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event) => {
   const lead = event.data.data();
   console.log("🚀 Nouveau lead détecté :", lead);
@@ -200,21 +197,21 @@ exports.handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event
       new Date(Date.now() + item.delay * 86400000)
     );
 
-   await db.collection("emails").add({
-  ...emailData,
-  toEmail: lead.email,
-  userId: lead.userId,
-  status: "scheduled",
-  createdAt: admin.firestore.Timestamp.now(),
-  scheduledAt: scheduledDate,
-  originLeadId: event.params.leadId,
-  refId: refId,
-workflowId: matchedWorkflow.id,
-    source: {
-    type: "workflow",
-    refId: refId
-  }
-});
+    await db.collection("emails").add({
+      ...emailData,
+      toEmail: lead.email,
+      userId: lead.userId,
+      status: "scheduled",
+      createdAt: admin.firestore.Timestamp.now(),
+      scheduledAt: scheduledDate,
+      originLeadId: event.params.leadId,
+      refId: refId,
+      workflowId: matchedWorkflow.id,
+      source: {
+        type: "workflow",
+        refId: refId
+      }
+    });
 
     console.log(`📩 Email ${item.emailId} dupliqué pour ${lead.email}`);
   }
