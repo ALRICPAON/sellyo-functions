@@ -1,1 +1,0 @@
-// Placeholder content for dashboard-sellyo/tailwind.config.js
