@@ -15,7 +15,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
-          node-version: '18'
+          node-version: '22'
 
       - name: Install dependencies in functions folder
         working-directory: ./functions
@@ -26,8 +26,10 @@ jobs:
 
       - name: Deploy Firebase Functions
         env:
-          FIREBASE_TOKEN: ${{ secrets.FIREBASE_TOKEN }}
+          GOOGLE_APPLICATION_CREDENTIALS: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_2 }}
           MAILERSEND_API_KEY: ${{ secrets.MAILERSEND_API_KEY }}
-          FIREBASE_SERVICE_ACCOUNT_2: ${{ secrets.FIREBASE_SERVICE_ACCOUNT_2 }}
           MAKE_WEBHOOK_URL: ${{ secrets.MAKE_WEBHOOK_URL }}
-        run: firebase deploy --only functions --project sellyo-3bbdb
+        run: |
+          echo "${{ secrets.FIREBASE_SERVICE_ACCOUNT_2 }}" > /tmp/firebase-key.json
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-key.json
+          firebase deploy --only functions --project sellyo-3bbdb
