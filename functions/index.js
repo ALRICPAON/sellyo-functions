@@ -1,10 +1,12 @@
-import functions from "firebase-functions";
-import admin from "firebase-admin";
-import axios from "axios";
-import MailerSendPkg from "mailersend";
-const { EmailParams, Sender, Recipient, Attachment } = MailerSendPkg;
-const MailerSend = MailerSendPkg.default;
+const functions = require("firebase-functions/v2");
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/firestore");
+const admin = require("firebase-admin");
+const axios = require("axios");
 
+const MailerSendPkg = require("mailersend");
+const MailerSend = MailerSendPkg.default;
+const { EmailParams, Sender, Recipient, Attachment } = MailerSendPkg;
 
 admin.initializeApp();
 const db = admin.firestore();
