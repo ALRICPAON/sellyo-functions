@@ -1,5 +1,4 @@
 const { onRequest } = require("firebase-functions/v2/https");
-const functions = require("firebase-functions");
 const admin = require("./firebase-admin-init");
 const fetch = require("node-fetch");
 const cors = require("cors")({ origin: true }); // ✅ CORS autorisé pour tous
@@ -18,7 +17,7 @@ exports.modifyEmail = onRequest(async (req, res) => {
 
       await db.collection("emails").doc(emailId).update(updates);
 
-      const makeWebhookUrl = functions.config().make.webhookeditmail_url;
+      const makeWebhookUrl = process.env.MAKE_WEBHOOKEDITMAIL_URL;
       if (makeWebhookUrl) {
         await fetch(makeWebhookUrl, {
           method: "POST",
