@@ -5,25 +5,18 @@ const axios = require("axios");
 const functions = require("firebase-functions");
 const { onSchedule, onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2");
 
-// ✅ Import MailerSend
-const mailersend = require("mailersend");
-const {
-  EmailParams,
-  Sender,
-  Recipient,
-  Attachment
-} = mailersend;
+// ✅ Import MailerSend (correct pour v1.2.2)
+const { MailerSend, EmailParams, Sender, Recipient, Attachment } = require("mailersend");
 
 console.log("📦 Démarrage index.js – début");
 console.log("📦 MailerSend importé avec succès.");
-console.log("📤 Type de MailerSend :", typeof mailersend.Mailersend);
+console.log("📤 Type de MailerSend :", typeof MailerSend);
 
-// ✅ Instanciation
-const mailsend = new mailersend.Mailersend({
+// ✅ Instanciation correcte
+const mailsend = new MailerSend({
   api_key: functions.config().mailersend.api_key,
 });
 console.log("✅ MailerSend instancié.");
-
 const { modifyEmail } = require("./modifyEmail");
 
 // ✅ Initialisation Firebase Admin
