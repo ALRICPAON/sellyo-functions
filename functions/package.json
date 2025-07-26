@@ -1,7 +1,6 @@
 {
-  "type": "module",
   "name": "functions",
-  "main": "index.mjs",
+  "main": "index.js",
   "scripts": {
     "lint": "eslint .",
     "serve": "firebase emulators:start --only functions",
