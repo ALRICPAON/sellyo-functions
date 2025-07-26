@@ -3,7 +3,8 @@ const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/firestore");
 const admin = require("firebase-admin");
 const axios = require("axios");
-const { MailerSend, EmailParams, Sender, Recipient, Attachment } = require("mailersend");
+const MailerSend = require("mailersend").default;
+const { EmailParams, Sender, Recipient, Attachment } = require("mailersend");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -12,6 +13,7 @@ const db = admin.firestore();
 const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
+
 
 // Fonction 1 : Envoi quand le statut passe à "ready"
 exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
