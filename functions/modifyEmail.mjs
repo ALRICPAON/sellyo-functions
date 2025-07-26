@@ -1,11 +1,13 @@
-const functions = require("firebase-functions");
-const admin = require("firebase-admin");
-const axios = require("axios");
-const cors = require("cors")({ origin: true });
+import functions from "firebase-functions";
+import admin from "firebase-admin";
+import axios from "axios";
+import corsFactory from "cors";
+
+const cors = corsFactory({ origin: true });
 
 admin.initializeApp();
 
-exports.modifyEmail = functions.https.onRequest((req, res) => {
+export const modifyEmail = functions.https.onRequest((req, res) => {
   cors(req, res, async () => {
     try {
       if (req.method !== "POST") {
@@ -18,7 +20,6 @@ exports.modifyEmail = functions.https.onRequest((req, res) => {
       }
 
       const makeWebhookURL = functions.config().make.webhook_url;
-
       const response = await axios.post(makeWebhookURL, { id, html, name, type });
 
       if (response.status === 200) {
