@@ -1,25 +1,50 @@
-console.log("📦 MailerSend version OK");
-
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
 const functions = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const axios = require("axios");
 
-// ✅ Import standard pour mailersend v1.3.0
-const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend"); // OK avec v1.2.0
+// 🔍 Log de test : début du fichier
+console.log("📦 Démarrage index.js – début");
+
+// ✅ Import MailerSend avec fallback + logs
+let MailerSend;
+let EmailParams, Sender, Recipient;
+
+try {
+  const mailersend = require("mailersend");
+  MailerSend = mailersend.MailerSend || mailersend.default;
+  EmailParams = mailersend.EmailParams;
+  Sender = mailersend.Sender;
+  Recipient = mailersend.Recipient;
+
+  console.log("📦 MailerSend importé avec succès.");
+  if (MailerSend) {
+    console.log("✅ MailerSend est une fonction :", typeof MailerSend);
+  } else {
+    console.warn("⚠️ MailerSend est null ou undefined.");
+  }
+} catch (err) {
+  console.error("❌ Erreur import MailerSend :", err);
+}
 
 const { modifyEmail } = require("./modifyEmail");
 
 if (!admin.apps.length) {
   admin.initializeApp();
+  console.log("✅ Firebase Admin initialisé.");
 }
 const db = admin.firestore();
 
-// ✅ Instanciation correcte
+// ✅ Vérification MailerSend avant instanciation
+if (!MailerSend) {
+  throw new Error("⛔ MailerSend non défini, arrêt du déploiement.");
+}
+
 const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
+console.log("✅ MailerSend instancié.");
 
 
 exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
