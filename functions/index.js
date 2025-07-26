@@ -3,7 +3,7 @@ const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/
 const functions = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const axios = require("axios");
-const MailerSend = require("mailersend").default;
+const { MailerSend } = require("mailersend");
 const { EmailParams, Sender, Recipient } = require("mailersend");
 const { modifyEmail } = require("./modifyEmail");
 
