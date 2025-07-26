@@ -1,18 +1,15 @@
-const functions = require("firebase-functions/v2");
-const { onSchedule } = require("firebase-functions/v2/scheduler");
-const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/firestore");
-const admin = require("firebase-admin");
-const axios = require("axios");
-const MailerSend = require("mailersend").default;
-const { EmailParams, Sender, Recipient, Attachment } = require("mailersend");
+import functions from "firebase-functions";
+import admin from "firebase-admin";
+import axios from "axios";
+import { MailerSend, EmailParams, Sender, Recipient, Attachment } from "mailersend";
 
 admin.initializeApp();
 const db = admin.firestore();
 
-// Lecture des clés via Firebase config
 const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
+
 
 
 // Fonction 1 : Envoi quand le statut passe à "ready"
