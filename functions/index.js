@@ -5,10 +5,7 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 
 // ✅ Import standard pour mailersend v1.3.0
-const { MailerSend } = require("mailersend/commonjs/mailersend.cjs");
-const { EmailParams } = require("mailersend/commonjs/email-params.cjs");
-const { Sender } = require("mailersend/commonjs/sender.cjs");
-const { Recipient } = require("mailersend/commonjs/recipient.cjs");
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend"); // OK avec v1.2.0
 
 const { modifyEmail } = require("./modifyEmail");
 
