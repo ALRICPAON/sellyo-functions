@@ -1,11 +1,9 @@
-import functions from "firebase-functions/v2";
-import { onSchedule } from "firebase-functions/v2/scheduler";
-import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/firestore";
-import admin from "firebase-admin";
-import axios from "axios";
-
-// ✅ Import correct pour mailersend@1.3.x
-import MailerSend from "mailersend";
+const { onSchedule } = require("firebase-functions/v2/scheduler");
+const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
+const functions = require("firebase-functions/v2");
+const admin = require("firebase-admin");
+const axios = require("axios");
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -14,8 +12,7 @@ const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
 
-// Fonction 1 : Envoi quand le statut passe à "ready"
-export const sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
+exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
   const before = event.data.before.data();
   const after = event.data.after.data();
 
@@ -120,8 +117,7 @@ export const sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (eve
   }
 });
 
-// Fonction planifiée – vérifie chaque minute les mails à programmer
-export const checkScheduledEmails = onSchedule("every 1 minutes", async () => {
+exports.checkScheduledEmails = onSchedule("every 1 minutes", async () => {
   const now = new Date();
   const snapshot = await db.collection("emails")
     .where("status", "==", "scheduled")
@@ -143,8 +139,7 @@ export const checkScheduledEmails = onSchedule("every 1 minutes", async () => {
   console.log(`✅ ${snapshot.size} email(s) mis à jour.`);
 });
 
-// Détection de nouveau lead et intégration automatique dans workflow
-export const handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event) => {
+exports.handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event) => {
   const lead = event.data.data();
   console.log("🚀 Nouveau lead détecté :", lead);
 
