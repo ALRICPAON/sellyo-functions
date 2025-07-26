@@ -6,7 +6,9 @@ const axios = require("axios");
 const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 const { modifyEmail } = require("./modifyEmail");
 
-admin.initializeApp();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 const db = admin.firestore();
 
 const mailsend = new MailerSend({
