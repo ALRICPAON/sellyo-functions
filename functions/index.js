@@ -4,6 +4,7 @@ const functions = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const axios = require("axios");
 const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
+const { modifyEmail } = require("./modifyEmail");
 
 admin.initializeApp();
 const db = admin.firestore();
@@ -206,3 +207,10 @@ exports.handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event
     console.log(`📩 Email ${item.emailId} dupliqué pour ${lead.email}`);
   }
 });
+module.exports = {
+  sendEmailOnReady,
+  checkScheduledEmails,
+  handleNewLeadWorkflow,
+  modifyEmail // 👈 ajoute cette ligne ici
+};
+
