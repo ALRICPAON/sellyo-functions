@@ -1,3 +1,5 @@
+console.log("📦 MailerSend version OK");
+
 const { onSchedule } = require("firebase-functions/v2/scheduler");
 const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/firestore");
 const functions = require("firebase-functions/v2");
