@@ -4,7 +4,6 @@ import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/firesto
 import admin from "firebase-admin";
 import axios from "axios";
 
-// ✅ Import correct pour MailerSend SDK v1.3+
 import { default as MailerSend, EmailParams, Sender, Recipient, Attachment } from "mailersend";
 
 admin.initializeApp();
@@ -14,9 +13,8 @@ const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
 
-
 // Fonction 1 : Envoi quand le statut passe à "ready"
-exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
+export const sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
   const before = event.data.before.data();
   const after = event.data.after.data();
 
@@ -122,7 +120,7 @@ exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) =
 });
 
 // Fonction planifiée – vérifie chaque minute les mails à programmer
-exports.checkScheduledEmails = onSchedule("every 1 minutes", async () => {
+export const checkScheduledEmails = onSchedule("every 1 minutes", async () => {
   const now = new Date();
   const snapshot = await db.collection("emails")
     .where("status", "==", "scheduled")
@@ -145,7 +143,7 @@ exports.checkScheduledEmails = onSchedule("every 1 minutes", async () => {
 });
 
 // Détection de nouveau lead et intégration automatique dans workflow
-exports.handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event) => {
+export const handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event) => {
   const lead = event.data.data();
   console.log("🚀 Nouveau lead détecté :", lead);
 
