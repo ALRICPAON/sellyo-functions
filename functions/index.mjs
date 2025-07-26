@@ -1,7 +1,10 @@
 import functions from "firebase-functions";
 import admin from "firebase-admin";
 import axios from "axios";
-import { MailerSend, EmailParams, Sender, Recipient, Attachment } from "mailersend";
+import MailerSendPkg from "mailersend";
+const { EmailParams, Sender, Recipient, Attachment } = MailerSendPkg;
+const MailerSend = MailerSendPkg.default;
+
 
 admin.initializeApp();
 const db = admin.firestore();
