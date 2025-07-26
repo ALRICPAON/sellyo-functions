@@ -9,13 +9,13 @@ const { onSchedule, onDocumentUpdated, onDocumentCreated } = require("firebase-f
 console.log("📦 Démarrage index.js – début");
 
 // ✅ Import MailerSend (v1.2.2)
-const MailerSend = require("mailersend");
+const { MailerSend, EmailParams, Sender, Recipient, Attachment } = require("mailersend");
 
 console.log("📦 MailerSend importé avec succès.");
 console.log("📤 Type de MailerSend :", typeof MailerSend);
 
-// ✅ Utilisation de functions.config() (nécessite le import v1)
-const mailsend = new MailerSend.Mailersend({
+// ✅ Utilisation de functions.config() (version correcte)
+const mailsend = new MailerSend({
   api_key: functions.config().mailersend.api_key,
 });
 console.log("✅ MailerSend instancié.");
