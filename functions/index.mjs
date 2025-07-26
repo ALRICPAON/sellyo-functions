@@ -4,9 +4,8 @@ import { onDocumentUpdated, onDocumentCreated } from "firebase-functions/firesto
 import admin from "firebase-admin";
 import axios from "axios";
 
-import MailerSendPkg from "mailersend";
-const MailerSend = MailerSendPkg.default;
-const { EmailParams, Sender, Recipient, Attachment } = MailerSendPkg;
+// ✅ Import correct pour MailerSend SDK v1.3+
+import { default as MailerSend, EmailParams, Sender, Recipient, Attachment } from "mailersend";
 
 admin.initializeApp();
 const db = admin.firestore();
