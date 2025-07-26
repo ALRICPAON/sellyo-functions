@@ -3,9 +3,9 @@ const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/
 const functions = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const axios = require("axios");
-const mailersend = require("mailersend");
-const MailerSend = mailersend.default;
-const { EmailParams, Sender, Recipient } = mailersend;
+
+// ✅ CORRECT : import direct sans ".default"
+const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
 const { modifyEmail } = require("./modifyEmail");
 
@@ -13,7 +13,6 @@ if (!admin.apps.length) {
   admin.initializeApp();
 }
 const db = admin.firestore();
-
 const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
