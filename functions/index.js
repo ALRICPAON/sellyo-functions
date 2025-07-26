@@ -4,9 +4,7 @@ const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/fir
 const admin = require("firebase-admin");
 const axios = require("axios");
 
-const MailerSendPkg = require("mailersend");
-const MailerSend = MailerSendPkg.default;
-const { EmailParams, Sender, Recipient, Attachment } = MailerSendPkg;
+const { MailerSend, EmailParams, Sender, Recipient, Attachment } = require("mailersend");
 
 admin.initializeApp();
 const db = admin.firestore();
