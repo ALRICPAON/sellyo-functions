@@ -6,7 +6,9 @@ const corsFactory = require("cors");
 
 const cors = corsFactory({ origin: true });
 
-admin.initializeApp();
+if (!admin.apps.length) {
+  admin.initializeApp();
+}
 
 exports.modifyEmail = onRequest((req, res) => {
   cors(req, res, async () => {
