@@ -3,8 +3,11 @@ const { onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2/
 const functions = require("firebase-functions/v2");
 const admin = require("firebase-admin");
 const axios = require("axios");
-const { MailerSend } = require("mailersend");
-const { EmailParams, Sender, Recipient } = require("mailersend");
+const mailersend = require("mailersend"); // 👈 ici
+
+const MailerSend = mailersend.default; // 👈 important en CommonJS
+const { EmailParams, Sender, Recipient } = mailersend;
+
 const { modifyEmail } = require("./modifyEmail");
 
 if (!admin.apps.length) {
