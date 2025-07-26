@@ -1,4 +1,5 @@
-import functions from "firebase-functions";
+import functions from "firebase-functions/v2";
+import { onRequest } from "firebase-functions/v2/https";
 import admin from "firebase-admin";
 import axios from "axios";
 import corsFactory from "cors";
@@ -7,7 +8,7 @@ const cors = corsFactory({ origin: true });
 
 admin.initializeApp();
 
-export const modifyEmail = functions.https.onRequest((req, res) => {
+export const modifyEmail = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
       if (req.method !== "POST") {
@@ -19,7 +20,8 @@ export const modifyEmail = functions.https.onRequest((req, res) => {
         return res.status(400).send("Paramètres manquants");
       }
 
-      const makeWebhookURL = functions.config().make.webhook_url;
+      const makeWebhookURL = process.env.MAKE_WEBHOOK_URL || functions.config().make.webhook_url;
+
       const response = await axios.post(makeWebhookURL, { id, html, name, type });
 
       if (response.status === 200) {
