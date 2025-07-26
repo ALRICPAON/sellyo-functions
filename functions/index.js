@@ -14,7 +14,6 @@ const mailsend = new MailerSend({
 });
 
 
-
 // Fonction 1 : Envoi quand le statut passe à "ready"
 exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) => {
   const before = event.data.before.data();
