@@ -5,7 +5,10 @@ const admin = require("firebase-admin");
 const axios = require("axios");
 
 // ✅ CORRECT : import direct sans ".default"
-const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
+const mailersend = require("mailersend/commonjs");
+const { EmailParams, Sender, Recipient } = mailersend;
+const MailerSend = mailersend.MailerSend;
+
 
 const { modifyEmail } = require("./modifyEmail");
 
