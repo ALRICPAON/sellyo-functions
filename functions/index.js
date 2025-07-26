@@ -8,9 +8,9 @@ const { MailerSend, EmailParams, Sender, Recipient, Attachment } = require("mail
 admin.initializeApp();
 const db = admin.firestore();
 
-// Utilisation sécurisée de la clé MailerSend via variable d'environnement
+// Lecture des clés via Firebase config
 const mailsend = new MailerSend({
-  apiKey: process.env.MAILERSEND_API_KEY || functions.config().mailersend.api_key,
+  apiKey: functions.config().mailersend.api_key,
 });
 
 // Fonction 1 : Envoi quand le statut passe à "ready"
@@ -36,9 +36,7 @@ exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) =
   for (let i = 0; i < 3; i++) {
     try {
       const res = await axios.get(githubUrl, {
-        headers: {
-          "User-Agent": "Mozilla/5.0"
-        }
+        headers: { "User-Agent": "Mozilla/5.0" }
       });
 
       if (res.status === 200 && res.data.includes("<h1")) {
@@ -49,7 +47,6 @@ exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) =
     } catch (err) {
       console.warn(`⏳ Tentative ${i + 1} – HTML non dispo (${err.message})`);
     }
-
     await new Promise(resolve => setTimeout(resolve, 3000));
   }
 
@@ -64,10 +61,7 @@ exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) =
     const leadsSnapshot = await leadsRef.get();
     recipients = leadsSnapshot.docs.map(doc => {
       const lead = doc.data();
-      return {
-        email: lead.email,
-        name: lead.name || "Client"
-      };
+      return { email: lead.email, name: lead.name || "Client" };
     });
     if (recipients.length === 0) return;
   } else {
@@ -126,7 +120,7 @@ exports.sendEmailOnReady = onDocumentUpdated("emails/{emailId}", async (event) =
 });
 
 // Fonction planifiée – vérifie chaque minute les mails à programmer
-exports.checkScheduledEmails = onSchedule("every 1 minutes", async (event) => {
+exports.checkScheduledEmails = onSchedule("every 1 minutes", async () => {
   const now = new Date();
   const snapshot = await db.collection("emails")
     .where("status", "==", "scheduled")
