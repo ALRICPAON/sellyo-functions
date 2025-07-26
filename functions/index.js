@@ -1,15 +1,20 @@
-const functions = require("firebase-functions/v2");
+const admin = require("firebase-admin");
+const axios = require("axios");
+
+// ✅ Import des deux versions nécessaires
+const functions = require("firebase-functions");      // Pour config()
+const { onSchedule, onDocumentUpdated, onDocumentCreated } = require("firebase-functions/v2");
+
 // 🔍 Log de démarrage
 console.log("📦 Démarrage index.js – début");
 
-// ✅ Import direct de MailerSend v1.2.2 compatible CommonJS
+// ✅ Import MailerSend (v1.2.2)
 const { MailerSend, EmailParams, Sender, Recipient } = require("mailersend");
 
-// ✅ Logs de confirmation
 console.log("📦 MailerSend importé avec succès.");
-console.log("📤 Type de MailerSend :", typeof MailerSend); // Doit afficher "function"
+console.log("📤 Type de MailerSend :", typeof MailerSend);
 
-// ✅ Instanciation de MailerSend
+// ✅ Utilisation de functions.config() (nécessite le import v1)
 const mailsend = new MailerSend({
   apiKey: functions.config().mailersend.api_key,
 });
@@ -218,10 +223,4 @@ exports.handleNewLeadWorkflow = onDocumentCreated("leads/{leadId}", async (event
     console.log(`📩 Email ${item.emailId} dupliqué pour ${lead.email}`);
   }
 });
-module.exports = {
-  sendEmailOnReady,
-  checkScheduledEmails,
-  handleNewLeadWorkflow,
-  modifyEmail // 👈 ajoute cette ligne ici
-};
 
