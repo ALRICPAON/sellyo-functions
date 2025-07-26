@@ -25,6 +25,7 @@ try {
   throw err; // ⛔ Arrête le déploiement
 }
 
+
 const { modifyEmail } = require("./modifyEmail");
 
 // ✅ Initialisation Firebase Admin
