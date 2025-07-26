@@ -4,7 +4,7 @@ exports.modifyEmail = onRequest(
     memory: "256Mi",
     cpu: 1,
     timeoutSeconds: 60,
-    secrets: ["MAKE_WEBHOOK_URL"] // ✅ Ajoute ceci
+    secrets: ["MAKE_WEBHOOKEDITMAIL_URL"]
   },
   (req, res) => {
     cors(req, res, async () => {
@@ -18,7 +18,7 @@ exports.modifyEmail = onRequest(
           return res.status(400).send("Paramètres manquants");
         }
 
-        const makeWebhookURL = process.env.MAKE_WEBHOOK_URL; // ✅ utilisation directe
+        const makeWebhookURL = process.env.MAKE_WEBHOOKEDITMAIL_URL;
 
         if (!makeWebhookURL) {
           return res.status(500).send("❌ Webhook Make non défini (secret manquant)");
