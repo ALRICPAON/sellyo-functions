@@ -24,6 +24,11 @@ jobs:
       - name: Install Firebase CLI
         run: npm install -g firebase-tools
 
+      - name: Set Firebase Functions config from secrets
+        run: |
+          firebase functions:config:set mailersend.api_key="${{ secrets.MAILERSEND_API_KEY }}"
+          firebase functions:config:set make.webhook_url="${{ secrets.MAKE_WEBHOOK_URL }}"
+
       - name: Deploy Firebase Functions
         env:
           MAILERSEND_API_KEY: ${{ secrets.MAILERSEND_API_KEY }}
