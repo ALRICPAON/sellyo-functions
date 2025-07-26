@@ -1,14 +1,14 @@
-import functions from "firebase-functions/v2";
-import { onRequest } from "firebase-functions/v2/https";
-import admin from "firebase-admin";
-import axios from "axios";
-import corsFactory from "cors";
+const { onRequest } = require("firebase-functions/v2/https");
+const functions = require("firebase-functions/v2");
+const admin = require("firebase-admin");
+const axios = require("axios");
+const corsFactory = require("cors");
 
 const cors = corsFactory({ origin: true });
 
 admin.initializeApp();
 
-export const modifyEmail = onRequest((req, res) => {
+exports.modifyEmail = onRequest((req, res) => {
   cors(req, res, async () => {
     try {
       if (req.method !== "POST") {
@@ -30,7 +30,7 @@ export const modifyEmail = onRequest((req, res) => {
         return res.status(500).send("Erreur lors de l’appel Make");
       }
     } catch (error) {
-      console.error("Erreur modifyEmail:", error);
+      console.error("❌ Erreur modifyEmail :", error);
       return res.status(500).send("Erreur serveur");
     }
   });
