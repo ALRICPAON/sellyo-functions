@@ -6,4 +6,5 @@ const { modifyEmail } = require("./modifyEmail");
 exports.sendEmailOnReady = sendEmailOnReady;
 exports.checkScheduledEmails = checkScheduledEmails;
 exports.handleNewLeadWorkflow = handleNewLeadWorkflow;
-exports.modifyEmail = modifyEmail;
+exports.modifyEmail = require("./modifyEmail").modifyEmail;
+

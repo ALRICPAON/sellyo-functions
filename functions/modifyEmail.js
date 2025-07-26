@@ -1,45 +1,34 @@
-exports.modifyEmail = onRequest(
-  {
-    region: "us-central1",
-    memory: "256Mi",
-    cpu: 1,
-    timeoutSeconds: 60,
-    secrets: ["MAKE_WEBHOOKEDITMAIL_URL"]
-  },
-  (req, res) => {
-    cors(req, res, async () => {
-      try {
-        if (req.method !== "POST") {
-          return res.status(405).send("Méthode non autorisée");
-        }
+const { onRequest } = require("firebase-functions/v2/https");
+const admin = require("./firebase-admin-init"); // ✅ import commun
+const fetch = require("node-fetch");
 
-        const { id, html, name, type } = req.body;
-        if (!id || !html || !name || !type) {
-          return res.status(400).send("Paramètres manquants");
-        }
+const db = admin.firestore();
 
-        const makeWebhookURL = process.env.MAKE_WEBHOOKEDITMAIL_URL;
+exports.modifyEmail = onRequest(async (req, res) => {
+  try {
+    const emailId = req.body.emailId;
+    const updates = req.body.updates;
 
-        if (!makeWebhookURL) {
-          return res.status(500).send("❌ Webhook Make non défini (secret manquant)");
-        }
+    if (!emailId || !updates) {
+      return res.status(400).json({ error: "emailId et updates requis" });
+    }
 
-        const response = await axios.post(makeWebhookURL, {
-          id,
-          html,
-          name,
-          type,
-        });
+    // ✅ Mise à jour dans Firestore
+    await db.collection("emails").doc(emailId).update(updates);
 
-        if (response.status === 200) {
-          return res.status(200).send("✅ Email modifié avec succès");
-        } else {
-          return res.status(500).send("❌ Erreur lors de l’appel Make");
-        }
-      } catch (error) {
-        console.error("❌ Erreur modifyEmail :", error);
-        return res.status(500).send("❌ Erreur serveur");
-      }
-    });
+    // ✅ Appel sécurisé au webhook Make
+    const makeWebhookUrl = process.env.MAKE_WEBHOOK_URL;
+    if (makeWebhookUrl) {
+      await fetch(makeWebhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ emailId }),
+      });
+    }
+
+    return res.status(200).json({ success: true });
+  } catch (err) {
+    console.error("Erreur modifyEmail :", err);
+    return res.status(500).json({ error: "Erreur serveur" });
   }
-);
+});
