@@ -1,14 +1,10 @@
-// ✅ modifyEmail.js – version Cloud Functions Gen 2 full-compatible
-const { onRequest } = require("firebase-functions/v2/https");
-const axios = require("axios");
-const cors = require("cors")({ origin: true });
-
 exports.modifyEmail = onRequest(
   {
     region: "us-central1",
     memory: "256Mi",
     cpu: 1,
     timeoutSeconds: 60,
+    secrets: ["MAKE_WEBHOOK_URL"] // ✅ Ajoute ceci
   },
   (req, res) => {
     cors(req, res, async () => {
@@ -22,7 +18,8 @@ exports.modifyEmail = onRequest(
           return res.status(400).send("Paramètres manquants");
         }
 
-        const makeWebhookURL = process.env.MAKE_WEBHOOK_URL;
+        const makeWebhookURL = process.env.MAKE_WEBHOOK_URL; // ✅ utilisation directe
+
         if (!makeWebhookURL) {
           return res.status(500).send("❌ Webhook Make non défini (secret manquant)");
         }
@@ -41,7 +38,7 @@ exports.modifyEmail = onRequest(
         }
       } catch (error) {
         console.error("❌ Erreur modifyEmail :", error);
-        return res.status(500).send("❌ Erreur serveur : " + error.message);
+        return res.status(500).send("❌ Erreur serveur");
       }
     });
   }
