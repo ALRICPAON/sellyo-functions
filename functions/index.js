@@ -1,3 +1,4 @@
+const functions = require("firebase-functions/v2");
 // 🔍 Log de démarrage
 console.log("📦 Démarrage index.js – début");
 
