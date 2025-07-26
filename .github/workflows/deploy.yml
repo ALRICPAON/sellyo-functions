@@ -26,8 +26,8 @@ jobs:
 
       - name: Set Firebase Functions config from secrets
         run: |
-          firebase functions:config:set mailersend.api_key="${{ secrets.MAILERSEND_API_KEY }}"
-          firebase functions:config:set make.webhook_url="${{ secrets.MAKE_WEBHOOK_URL }}"
+          firebase functions:config:set mailersend.api_key="${{ secrets.MAILERSEND_API_KEY }}" --project sellyo-3bbdb
+          firebase functions:config:set make.webhook_url="${{ secrets.MAKE_WEBHOOK_URL }}" --project sellyo-3bbdb
 
       - name: Deploy Firebase Functions
         env:
