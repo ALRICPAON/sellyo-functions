@@ -13,6 +13,8 @@ exports.submitMainWebhook = onRequest(
     }
 
     try {
+logger.info("📥 Données reçues dans req.body :", req.body);
+
       const webhookUrl = process.env.MAKE_WEBHOOK_URL;
       if (!webhookUrl) {
         throw new Error("Secret MAKE_WEBHOOK_URL non défini");
