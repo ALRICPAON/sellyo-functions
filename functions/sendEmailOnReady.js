@@ -16,7 +16,9 @@ exports.sendEmailOnReady = onDocumentUpdated(
     memory: "512MiB",
     cpu: 1,
     timeoutSeconds: 60,
+    secrets: ["MAILERSEND_API_KEY"], // ✅ clé obligatoire pour injecter le secret
   },
+    
   async (event) => {
     const before = event.data.before.data();
 const after = event.data.after.data();
