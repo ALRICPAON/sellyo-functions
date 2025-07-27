@@ -16,7 +16,8 @@ exports.modifyEmail = onRequest(async (req, res) => {
       }
 
       // ✅ Update Firestore
-      await db.collection("emails").doc(emailId).update(updates);
+     const collection = updates.type === "landing" ? "tunnels" : "emails";
+await db.collection(collection).doc(emailId).update(updates);
 
       // ✅ Envoi webhook complet à Make
       const makeWebhookUrl = process.env.MAKE_WEBHOOKEDITMAIL_URL;
