@@ -41,7 +41,8 @@ logger.info("📥 Données reçues dans req.body :", req.body);
   productLink,
   productPrice,
   landingId,
-  tunnelId
+  tunnelId,
+  folder
 } = req.body;
 
 const payload = {
@@ -65,7 +66,8 @@ const payload = {
   productLink,
   productPrice,
   landingId,
-  tunnelId
+  tunnelId,
+  folder
 };
 
       Object.keys(payload).forEach((key) => {
