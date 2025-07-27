@@ -18,51 +18,53 @@ exports.submitMainWebhook = onRequest(
         throw new Error("Secret MAKE_WEBHOOK_URL non défini");
       }
 
-      const {
-        userId,
-        type,
-        name,
-        goal,
-        desc,
-        cta,
-        mainColor,
-        backgroundColor,
-        price,
-        paymentLink,
-        logo,
-        cover,
-        video,
-        subject,
-        replyTo,
-        tone,
-        productLink,
-        productPrice,
-        landingId,
-        tunnelId
-      } = req.body;
+     const {
+  userId,
+  type,
+  name,
+  slug, // ← ✅ ajoute ce champ ici
+  goal,
+  desc,
+  cta,
+  mainColor,
+  backgroundColor,
+  price,
+  paymentLink,
+  logo,
+  cover,
+  video,
+  subject,
+  replyTo,
+  tone,
+  productLink,
+  productPrice,
+  landingId,
+  tunnelId
+} = req.body;
 
-      const payload = {
-        userId,
-        type,
-        name,
-        goal,
-        desc,
-        cta,
-        mainColor,
-        backgroundColor,
-        price,
-        paymentLink,
-        logo,
-        cover,
-        video,
-        subject,
-        replyTo,
-        tone,
-        productLink,
-        productPrice,
-        landingId,
-        tunnelId
-      };
+const payload = {
+  userId,
+  type,
+  name,
+  slug, // ← ✅ ajoute-le ici aussi
+  goal,
+  desc,
+  cta,
+  mainColor,
+  backgroundColor,
+  price,
+  paymentLink,
+  logo,
+  cover,
+  video,
+  subject,
+  replyTo,
+  tone,
+  productLink,
+  productPrice,
+  landingId,
+  tunnelId
+};
 
       Object.keys(payload).forEach((key) => {
         if (payload[key] === undefined || payload[key] === null) {
