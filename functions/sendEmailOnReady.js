@@ -18,8 +18,8 @@ exports.sendEmailOnReady = onDocumentUpdated(
     timeoutSeconds: 60,
   },
   async (event) => {
-    const before = event.data.before.data;
-    const after = event.data.after.data;
+    const before = event.data.before.data();
+const after = event.data.after.data();
 
     if (before.status === "ready" || after.status !== "ready") return;
 
