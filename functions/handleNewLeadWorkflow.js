@@ -60,21 +60,23 @@ exports.handleNewLeadWorkflow = onDocumentCreated(
         new Date(Date.now() + item.delay * 86400000)
       );
 
-      await db.collection("emails").add({
-        ...emailData,
-        toEmail: lead.email,
-        userId: lead.userId,
-        status: "scheduled",
-        createdAt: admin.firestore.Timestamp.now(),
-        scheduledAt: scheduledDate,
-        originLeadId: snap.id,
-        refId: refId,
-        workflowId: matchedWorkflow.id,
-        source: {
-          type: "workflow",
-          refId: refId
-        }
-      });
+     await db.collection("emails").add({
+  ...emailData,
+  toEmail: lead.email,
+  userId: lead.userId,
+  status: "scheduled",
+  createdAt: admin.firestore.Timestamp.now(),
+  scheduledAt: scheduledDate,
+  originLeadId: snap.id,
+  associatedId: refId, // ✅ nécessaire pour sendEmailOnReady
+  refId: refId,
+  manualRecipients: [lead.email], // ✅ fallback utile
+  workflowId: matchedWorkflow.id,
+  source: {
+    type: "workflow",
+    refId: refId
+  }
+});
 
       console.log(`📩 Email ${item.emailId} dupliqué pour ${lead.email}`);
     }
