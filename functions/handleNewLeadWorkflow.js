@@ -13,7 +13,7 @@ exports.handleNewLeadWorkflow = onDocumentCreated(
   },
   async (event) => {
     const snap = event.data;
-    const lead = snap.data;
+    const lead = snap.data();
     console.log("🚀 Nouveau lead détecté :", lead);
 
     const refId = lead.refId || lead.source?.refId;
