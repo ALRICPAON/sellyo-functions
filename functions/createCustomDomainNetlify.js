@@ -18,7 +18,7 @@ exports.createCustomDomainNetlify = onRequest(
       return res.status(405).json({ error: "Méthode non autorisée" });
     }
 
-    const { customDomain, userId } = req.body;
+    const { domain: customDomain, userId } = req.body;
     const netlifyToken = process.env.NETLIFY_API_KEY;
 
     if (!customDomain || !userId) {
