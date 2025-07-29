@@ -1,60 +1,25 @@
 const { onRequest } = require("firebase-functions/v2/https");
-const logger = require("firebase-functions/logger");
-const fetch = require("node-fetch");
-
 const admin = require("./firebase-admin-init");
-const db = admin.firestore(); // 🔸 On pourra l'utiliser pour stocker le domaine si besoin
 
 exports.createCustomDomainNetlify = onRequest(
   {
+    region: "us-central1",
     cors: true,
-    secrets: ["NETLIFY_API_KEY"]
+    secrets: ["NETLIFY_TOKEN"],
   },
   async (req, res) => {
     if (req.method !== "POST") {
-      return res.status(405).json({ error: "Méthode non autorisée" });
+      return res.status(405).send("Method Not Allowed");
     }
 
-    const { domain, userId } = req.body;
-    if (!domain) {
-      return res.status(400).json({ error: "Domaine manquant" });
+    const { userId, customDomain } = req.body;
+
+    if (!userId || !customDomain) {
+      return res.status(400).json({ error: "Missing parameters" });
     }
 
-    const siteId = "9ddc62c5-0744-4ba5-90d1-0f53f89c7acf"; // ✅ ID Netlify Sellyo
-    const token = process.env.NETLIFY_API_KEY;
+    // Ici ta logique Netlify API
 
-    try {
-      const response = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/domains`, {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${token}`,
-          "Content-Type": "application/json"
-        },
-        body: JSON.stringify({ name: domain })
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        logger.error("❌ Erreur API Netlify :", data);
-        return res.status(400).json({ error: data.message || "Erreur API Netlify" });
-      }
-
-      // ✅ Facultatif : enregistrement dans Firestore
-      if (userId) {
-        await db.doc(`users/${userId}`).set({
-          customDomain: {
-            name: domain,
-            status: "pending"
-          }
-        }, { merge: true });
-      }
-
-      logger.info("✅ Domaine personnalisé ajouté :", data);
-      return res.status(200).json({ success: true, data });
-    } catch (err) {
-      logger.error("❌ Erreur serveur :", err);
-      return res.status(500).json({ error: "Erreur interne serveur" });
-    }
+    return res.json({ ok: true, message: "Domain registered (mock)" });
   }
 );
