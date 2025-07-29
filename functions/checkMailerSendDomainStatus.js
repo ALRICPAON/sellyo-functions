@@ -1,12 +1,8 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
-const { initializeApp, applicationDefault } = require("firebase-admin/app");
-const { getFirestore } = require("firebase-admin/firestore");
-
-// 🟢 Init admin SDK
-initializeApp();
-const db = getFirestore();
+const admin = require("./firebase-admin-init"); // ✅ Import centralisé
+const db = admin.firestore();
 
 exports.checkMailerSendDomainStatus = onRequest(
   {
