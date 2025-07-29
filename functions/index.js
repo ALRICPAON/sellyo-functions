@@ -4,6 +4,10 @@ const { handleNewLeadWorkflow } = require("./handleNewLeadWorkflow");
 const { modifyEmail } = require("./modifyEmail");
 const { submitMainWebhook } = require("./submitMainWebhook");
 const { createMailerSendDomain } = require("./createMailerSendDomain");
+const checkMailerSendDomainStatus = require("./checkMailerSendDomainStatus");
+const createMailerSendDomain = require("./createMailerSendDomain");
+const createCustomDomainNetlify = require("./createCustomDomainNetlify");
+
 
 exports.submitMainWebhook = submitMainWebhook;
 exports.sendEmailOnReady = sendEmailOnReady;
@@ -11,3 +15,7 @@ exports.checkScheduledEmails = checkScheduledEmails;
 exports.handleNewLeadWorkflow = handleNewLeadWorkflow;
 exports.modifyEmail = modifyEmail; // 👈 pas besoin de require à nouveau ici
 exports.createMailerSendDomain = createMailerSendDomain;
+exports.checkMailerSendDomainStatus = checkMailerSendDomainStatus;
+exports.createMailerSendDomain = createMailerSendDomain;
+exports.createCustomDomainNetlify = createCustomDomainNetlify;
+
