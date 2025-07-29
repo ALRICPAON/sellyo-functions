@@ -2,6 +2,9 @@ const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
 
+const admin = require("./firebase-admin-init");
+const db = admin.firestore(); // 🔸 prêt si tu veux enregistrer plus tard le domaine
+
 exports.createMailerSendDomain = onRequest(
   {
     cors: true,
@@ -12,7 +15,7 @@ exports.createMailerSendDomain = onRequest(
       return res.status(405).json({ error: "Méthode non autorisée" });
     }
 
-    const { domain } = req.body;
+    const { domain, userId } = req.body;
     if (!domain) {
       return res.status(400).json({ error: "Domaine manquant dans la requête" });
     }
@@ -46,6 +49,17 @@ exports.createMailerSendDomain = onRequest(
         domain: data.name,
         dns: data.dns?.records
       });
+
+      // 🔄 Enregistrement dans Firestore si userId fourni
+      if (userId) {
+        await db.doc(`users/${userId}`).set({
+          emailDomain: {
+            domainId: data.id,
+            name: data.name,
+            status: "pending"
+          }
+        }, { merge: true });
+      }
 
       return res.status(200).json({
         id: data.id,
