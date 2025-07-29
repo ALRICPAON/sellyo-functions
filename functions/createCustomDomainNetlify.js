@@ -1,25 +1,29 @@
+const functions = require("firebase-functions/v2");
 const { onRequest } = require("firebase-functions/v2/https");
-const admin = require("./firebase-admin-init");
+
+const netlifyApiKey = functions.config().netlify?.api_key;
 
 exports.createCustomDomainNetlify = onRequest(
   {
-    region: "us-central1",
     cors: true,
-    secrets: ["NETLIFY_TOKEN"],
+    region: "europe-west1",
   },
   async (req, res) => {
     if (req.method !== "POST") {
-      return res.status(405).send("Method Not Allowed");
+      return res.status(405).send("Méthode non autorisée");
+    }
+
+    if (!netlifyApiKey) {
+      return res.status(500).json({ error: "Clé Netlify non configurée." });
     }
 
     const { userId, customDomain } = req.body;
-
     if (!userId || !customDomain) {
-      return res.status(400).json({ error: "Missing parameters" });
+      return res.status(400).json({ error: "Champs manquants." });
     }
 
-    // Ici ta logique Netlify API
+    // Exemple d'appel API Netlify avec netlifyApiKey ici...
 
-    return res.json({ ok: true, message: "Domain registered (mock)" });
+    res.json({ ok: true, message: "Domaine enregistré avec succès (mock)." });
   }
 );
