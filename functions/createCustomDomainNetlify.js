@@ -39,12 +39,20 @@ exports.createCustomDomainNetlify = onRequest(
         body: JSON.stringify({ name: customDomain }),
       });
 
-      const data = await response.json();
+      const rawText = await response.text();
 
-      if (!response.ok) {
-        logger.error("❌ Erreur API Netlify :", data);
-        return res.status(400).json({ error: data.message || "Erreur API inconnue" });
-      }
+if (!response.ok) {
+  logger.error("❌ Réponse brute Netlify :", rawText);
+  return res.status(400).json({ error: rawText || "Erreur API inconnue" });
+}
+
+let data;
+try {
+  data = JSON.parse(rawText);
+} catch (err) {
+  logger.error("❌ JSON.parse failed :", err);
+  return res.status(500).json({ error: "Réponse invalide de Netlify (non-JSON)" });
+}
 
       logger.info("✅ Domaine rattaché à Netlify :", data);
 
