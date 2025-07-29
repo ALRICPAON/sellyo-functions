@@ -17,6 +17,9 @@ exports.createMailerSendDomain = onRequest(
       return res.status(400).json({ error: "Domaine manquant dans la requête" });
     }
 
+    logger.info("🔐 Vérification API_KEY MailerSend :", !!process.env.MAILERSEND_API_KEY);
+    logger.info("🌐 Domaine reçu :", domain);
+
     try {
       const response = await fetch("https://api.mailersend.com/v1/domain-identities", {
         method: "POST",
@@ -38,14 +41,12 @@ exports.createMailerSendDomain = onRequest(
         return res.status(400).json({ error: data?.message || "Erreur API inconnue" });
       }
 
-      // 🔍 Log des données utiles
       logger.info("✅ Domaine MailerSend créé :", {
         id: data.id,
         domain: data.name,
         dns: data.dns?.records
       });
 
-      // ✅ Réponse simplifiée pour le frontend
       return res.status(200).json({
         id: data.id,
         domain: data.name,
