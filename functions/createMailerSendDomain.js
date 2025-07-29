@@ -13,9 +13,8 @@ exports.createMailerSendDomain = onRequest(
     }
 
     const { domain } = req.body;
-
     if (!domain) {
-      return res.status(400).json({ error: "Domaine manquant" });
+      return res.status(400).json({ error: "Domaine manquant dans la requête" });
     }
 
     try {
@@ -35,15 +34,26 @@ exports.createMailerSendDomain = onRequest(
       const data = await response.json();
 
       if (!response.ok) {
-        logger.error("❌ Erreur MailerSend :", data);
-        return res.status(400).json({ error: data?.message || "Erreur inconnue" });
+        logger.error("❌ Erreur API MailerSend :", data);
+        return res.status(400).json({ error: data?.message || "Erreur API inconnue" });
       }
 
-      logger.info("✅ Domaine créé avec succès :", data);
-      return res.status(200).json(data);
+      // 🔍 Log des données utiles
+      logger.info("✅ Domaine MailerSend créé :", {
+        id: data.id,
+        domain: data.name,
+        dns: data.dns?.records
+      });
+
+      // ✅ Réponse simplifiée pour le frontend
+      return res.status(200).json({
+        id: data.id,
+        domain: data.name,
+        dns: data.dns?.records || []
+      });
     } catch (err) {
-      logger.error("❌ Erreur inattendue :", err);
-      return res.status(500).json({ error: "Erreur serveur" });
+      logger.error("❌ Erreur serveur interne :", err);
+      return res.status(500).json({ error: "Erreur serveur lors de la création du domaine" });
     }
   }
 );
