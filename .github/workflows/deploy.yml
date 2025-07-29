@@ -31,15 +31,15 @@ jobs:
           firebase projects:list --project sellyo-3bbdb
 
       # ✅ ICI : tous les secrets utilisés dans ton code Firebase
-     - name: Set Firebase Functions config from secrets
-  run: |
-    export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-key.json
-    firebase functions:config:set \
-      mailersend.api_key="${{ secrets.MAILERSEND_API_KEY }}" \
-      netlify.api_key="${{ secrets.NETLIFY_API_KEY }}" \
-      make.webhook_url="${{ secrets.MAKE_WEBHOOK_URL }}" \
-      make.webhookeditmail_url="${{ secrets.MAKE_WEBHOOKEDITMAIL_URL }}" \
-      --project sellyo-3bbdb
+      - name: Set Firebase Functions config from secrets
+        run: |
+          export GOOGLE_APPLICATION_CREDENTIALS=/tmp/firebase-key.json
+          firebase functions:config:set \
+            mailersend.api_key="${{ secrets.MAILERSEND_API_KEY }}" \
+            netlify.api_key="${{ secrets.NETLIFY_API_KEY }}" \
+            make.webhook_url="${{ secrets.MAKE_WEBHOOK_URL }}" \
+            make.webhookeditmail_url="${{ secrets.MAKE_WEBHOOKEDITMAIL_URL }}" \
+            --project sellyo-3bbdb
 
       - name: Deploy Firebase Functions
         env:
