@@ -1,29 +1,69 @@
-const functions = require("firebase-functions/v2");
-const { onRequest } = require("firebase-functions/v2/https");
+// ✅ Fichier : createCustomDomainNetlify.js
 
-const netlifyApiKey = functions.config().netlify?.api_key;
+const { onRequest } = require("firebase-functions/v2/https");
+const logger = require("firebase-functions/logger");
+const fetch = require("node-fetch");
+
+const admin = require("./firebase-admin-init");
+const db = admin.firestore();
 
 exports.createCustomDomainNetlify = onRequest(
   {
     cors: true,
+    secrets: ["NETLIFY_API_KEY"],
     region: "europe-west1",
   },
   async (req, res) => {
     if (req.method !== "POST") {
-      return res.status(405).send("Méthode non autorisée");
+      return res.status(405).json({ error: "Méthode non autorisée" });
     }
 
-    if (!netlifyApiKey) {
-      return res.status(500).json({ error: "Clé Netlify non configurée." });
+    const { domain, userId } = req.body;
+    const netlifyToken = process.env.NETLIFY_API_KEY;
+
+    if (!domain || !userId) {
+      return res.status(400).json({ error: "Domaine ou userId manquant" });
     }
 
-    const { userId, customDomain } = req.body;
-    if (!userId || !customDomain) {
-      return res.status(400).json({ error: "Champs manquants." });
+    logger.info("📩 Requête domaine Netlify :", { domain, userId });
+
+    try {
+      const siteId = "ton-site-id-netlify"; // ← 🛑 À remplacer par ton vrai siteId Netlify
+
+      const response = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/domains`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${netlifyToken}`,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ name: domain }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        logger.error("❌ Erreur API Netlify :", data);
+        return res.status(400).json({ error: data.message || "Erreur API inconnue" });
+      }
+
+      logger.info("✅ Domaine rattaché à Netlify :", data);
+
+      // 🔐 Enregistrement dans Firestore
+      await db.doc(`users/${userId}`).set(
+        {
+          siteDomain: {
+            domain,
+            createdAt: Date.now(),
+            status: "pending",
+          },
+        },
+        { merge: true }
+      );
+
+      return res.status(200).json({ success: true, domain });
+    } catch (err) {
+      logger.error("🔥 Erreur serveur :", err);
+      return res.status(500).json({ error: "Erreur serveur Netlify" });
     }
-
-    // Exemple d'appel API Netlify avec netlifyApiKey ici...
-
-    res.json({ ok: true, message: "Domaine enregistré avec succès (mock)." });
   }
 );
