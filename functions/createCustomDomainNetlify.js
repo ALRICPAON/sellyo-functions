@@ -2,6 +2,9 @@ const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
 
+const admin = require("./firebase-admin-init");
+const db = admin.firestore(); // 🔸 On pourra l'utiliser pour stocker le domaine si besoin
+
 exports.createCustomDomainNetlify = onRequest(
   {
     cors: true,
@@ -12,7 +15,7 @@ exports.createCustomDomainNetlify = onRequest(
       return res.status(405).json({ error: "Méthode non autorisée" });
     }
 
-    const { domain } = req.body;
+    const { domain, userId } = req.body;
     if (!domain) {
       return res.status(400).json({ error: "Domaine manquant" });
     }
@@ -35,6 +38,16 @@ exports.createCustomDomainNetlify = onRequest(
       if (!response.ok) {
         logger.error("❌ Erreur API Netlify :", data);
         return res.status(400).json({ error: data.message || "Erreur API Netlify" });
+      }
+
+      // ✅ Facultatif : enregistrement dans Firestore
+      if (userId) {
+        await db.doc(`users/${userId}`).set({
+          customDomain: {
+            name: domain,
+            status: "pending"
+          }
+        }, { merge: true });
       }
 
       logger.info("✅ Domaine personnalisé ajouté :", data);
