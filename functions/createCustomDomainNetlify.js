@@ -18,17 +18,17 @@ exports.createCustomDomainNetlify = onRequest(
       return res.status(405).json({ error: "Méthode non autorisée" });
     }
 
-    const { domain, userId } = req.body;
+    const { customDomain, userId } = req.body;
     const netlifyToken = process.env.NETLIFY_API_KEY;
 
-    if (!domain || !userId) {
+    if (!customDomain || !userId) {
       return res.status(400).json({ error: "Domaine ou userId manquant" });
     }
 
-    logger.info("📩 Requête domaine Netlify :", { domain, userId });
+    logger.info("📩 Requête domaine Netlify :", { customDomain, userId });
 
     try {
-      const siteId = "ton-site-id-netlify"; // ← 🛑 À remplacer par ton vrai siteId Netlify
+      const siteId = "9ddc62c5-0744-4ba5-90d1-0f53f89c7acf"; // ← 🛑 À remplacer par ton vrai siteId Netlify
 
       const response = await fetch(`https://api.netlify.com/api/v1/sites/${siteId}/domains`, {
         method: "POST",
@@ -36,7 +36,7 @@ exports.createCustomDomainNetlify = onRequest(
           Authorization: `Bearer ${netlifyToken}`,
           "Content-Type": "application/json",
         },
-        body: JSON.stringify({ name: domain }),
+        body: JSON.stringify({ name: customDomain }),
       });
 
       const data = await response.json();
@@ -52,7 +52,7 @@ exports.createCustomDomainNetlify = onRequest(
       await db.doc(`users/${userId}`).set(
         {
           siteDomain: {
-            domain,
+            domain: customDomain,
             createdAt: Date.now(),
             status: "pending",
           },
@@ -60,7 +60,7 @@ exports.createCustomDomainNetlify = onRequest(
         { merge: true }
       );
 
-      return res.status(200).json({ success: true, domain });
+      return res.status(200).json({ success: true, domain: customDomain });
     } catch (err) {
       logger.error("🔥 Erreur serveur :", err);
       return res.status(500).json({ error: "Erreur serveur Netlify" });
