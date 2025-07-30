@@ -16,87 +16,102 @@ exports.generateAIVideo = onRequest({
     const { userId, scriptId } = req.body;
     if (!userId || !scriptId) throw new Error("Paramètres manquants.");
 
-    // 🔥 1. Récupération des données du script
+    // 🔥 1. Récupération du prompt depuis Firestore
     const scriptRef = db.doc(`scripts/${userId}/items/${scriptId}`);
     const scriptSnap = await scriptRef.get();
     if (!scriptSnap.exists) throw new Error("Script introuvable.");
-    const scriptData = scriptSnap.data();
 
+    const scriptData = scriptSnap.data();
     const promptUrl = scriptData.promptVideoUrl;
     if (!promptUrl) throw new Error("Aucun promptVideoUrl défini.");
 
     const promptText = await fetch(promptUrl).then(r => r.text());
     logger.info("📝 Prompt utilisé :", promptText);
 
-    // 🖼️ 2. Génération de l’image avec le prompt texte
-    const imageRes = await fetch("https://api.dev.runwayml.com/v1/text_to_image", {
+    // 🖼️ 2. Génération image : text_to_image
+    const imageGenRes = await fetch("https://api.runwayml.com/v1/text_to_image", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
+        Authorization: `Bearer ${process.env.RUNWAY_API_KEY}`,
         "Content-Type": "application/json",
         "X-Runway-Version": "2024-11-06"
       },
       body: JSON.stringify({
-        promptText,
-        model: "gen4_image", // ← tu peux aussi tester "gen3a_turbo"
-        ratio: "1280:720",
-        seed: 1234567890,
-        contentModeration: {
-          publicFigureThreshold: "auto"
-        }
+        prompt: promptText,
+        model: "gen3a_turbo",
+        ratio: "9:16"
       })
     });
 
-    if (!imageRes.ok) {
-      const errorText = await imageRes.text();
-      throw new Error("Erreur image Runway : " + errorText);
+    if (!imageGenRes.ok) {
+      const errText = await imageGenRes.text();
+      throw new Error("Erreur génération image : " + errText);
     }
 
-    const imageData = await imageRes.json();
-    const imageId = imageData.id;
-    logger.info("🖼️ Image générée – ID :", imageId);
+    const imageGenData = await imageGenRes.json();
+    const imageTaskId = imageGenData.id;
+    logger.info("🕒 Attente génération image - Task ID :", imageTaskId);
 
-    // ⏳ Facultatif : attendre quelques secondes pour être sûr que l’image est prête
-    await new Promise(resolve => setTimeout(resolve, 3000));
+    // ⏳ 3. Polling pour récupérer image_url
+    let imageUrl = null;
+    for (let i = 0; i < 10; i++) {
+      await new Promise(res => setTimeout(res, 3000)); // ⏱️ 3 secondes
+      const statusRes = await fetch(`https://api.runwayml.com/v1/tasks/${imageTaskId}`, {
+        headers: {
+          Authorization: `Bearer ${process.env.RUNWAY_API_KEY}`,
+          "X-Runway-Version": "2024-11-06"
+        }
+      });
+      const statusData = await statusRes.json();
+      if (statusData.status === "succeeded" && statusData.outputs?.[0]?.image_url) {
+        imageUrl = statusData.outputs[0].image_url;
+        logger.info("🖼️ Image générée :", imageUrl);
+        break;
+      }
+    }
 
-    // 📽️ 3. Génération de la vidéo à partir de l’image
-    const videoRes = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
+    if (!imageUrl) {
+      throw new Error("Image non générée dans le temps imparti.");
+    }
+
+    // 🎬 4. Génération vidéo à partir de l’image
+    const videoRes = await fetch("https://api.runwayml.com/v1/image_to_video", {
       method: "POST",
       headers: {
-        "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
+        Authorization: `Bearer ${process.env.RUNWAY_API_KEY}`,
         "Content-Type": "application/json",
         "X-Runway-Version": "2024-11-06"
       },
       body: JSON.stringify({
-        promptImage: `https://storage.googleapis.com/runway-ml/${imageId}.png`, // ← lien public attendu
+        promptImage: imageUrl,
         model: "gen3a_turbo",
         promptText,
         duration: 5,
-        ratio: "1280:720",
+        ratio: "9:16"
       })
     });
 
     if (!videoRes.ok) {
-      const errorText = await videoRes.text();
-      throw new Error("Erreur vidéo Runway : " + errorText);
+      const errText = await videoRes.text();
+      throw new Error("Erreur vidéo Runway : " + errText);
     }
 
     const videoData = await videoRes.json();
-    const videoJobId = videoData.id;
-    logger.info("🎬 Vidéo générée – Job ID :", videoJobId);
+    const videoTaskId = videoData.id;
+    logger.info("🎥 Vidéo en cours de génération - Job ID :", videoTaskId);
 
-    // 💾 4. Mise à jour Firestore
+    // 💾 5. Sauvegarde Firestore
     await scriptRef.update({
       status: "generating",
-      imageRunwayId: imageId,
-      runwayJobId: videoJobId,
+      runwayJobId: videoTaskId,
+      imageRunwayUrl: imageUrl,
       generationStartedAt: new Date().toISOString()
     });
 
     return res.status(200).json({
       success: true,
-      imageId,
-      videoJobId
+      videoJobId: videoTaskId,
+      imageUrl
     });
 
   } catch (err) {
