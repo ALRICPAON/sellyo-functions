@@ -1,6 +1,6 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { db } = require("./firebase-admin-init"); // ✅ Correct
-const { doc, getDoc, updateDoc } = require("firebase-admin/firestore");
+const { doc, getDoc, updateDoc } = require("firebase-admin").firestore; // ✅ CORRECT
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
 
