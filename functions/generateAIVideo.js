@@ -1,7 +1,7 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
-const admin = require("./firebase-admin-init"); // ✅ Centralisé
+const admin = require("./firebase-admin-init"); // ✅ Initialisation centralisée
 const db = admin.firestore();
 
 exports.generateAIVideo = onRequest({
@@ -14,64 +14,62 @@ exports.generateAIVideo = onRequest({
 
   try {
     const { userId, scriptId } = req.body;
-    logger.info("📩 Données reçues :", { userId, scriptId });
+    if (!userId || !scriptId) throw new Error("❌ Paramètres manquants : userId ou scriptId");
 
-    if (!userId || !scriptId) throw new Error("Paramètres manquants.");
-
-    // 🔥 Récupération du script depuis Firestore
+    // 🔥 Récupération du script Firestore
     const scriptRef = db.doc(`scripts/${userId}/items/${scriptId}`);
     const scriptSnap = await scriptRef.get();
-    if (!scriptSnap.exists) throw new Error("Script introuvable");
+    if (!scriptSnap.exists) throw new Error("❌ Script introuvable en base");
 
     const scriptData = scriptSnap.data();
     const promptUrl = scriptData.promptVideoUrl;
-    logger.info("🌐 URL du prompt :", promptUrl);
+    if (!promptUrl) throw new Error("❌ Aucun promptVideoUrl défini dans le script");
 
-    if (!promptUrl) throw new Error("Aucun promptVideoUrl défini");
-
-    // 📥 Récupération du texte brut
+    // 📥 Récupération du contenu du prompt
     const promptText = await fetch(promptUrl).then(r => r.text());
-    logger.info("🧠 Prompt utilisé pour Runway :", promptText);
+    logger.info("📜 Prompt utilisé pour Runway :", promptText);
 
-    // 📤 Appel Runway
+    // 📦 Construction du payload
     const payload = {
-      prompt: promptText,
-      model: "act-two", // 🔄 assure-toi que ce modèle est bien dispo dans ton compte
-      width: 720,
-      height: 1280,
-      num_frames: 24,
-      output_format: "mp4"
+      model: "act_two",           // ✅ Modèle vidéo valide Runway
+      promptText: promptText,     // ✅ Texte brut sans emoji
+      ratio: "720:1280",          // ✅ Format vertical
+      duration: 5                 // ⏱️ Durée courte pour test (en secondes)
     };
 
-    logger.info("📤 Payload Runway envoyé :", payload);
+    logger.info("📦 Payload envoyé à Runway :", payload);
 
-    const runwayRes = await fetch("https://api.runwayml.com/v1/generate", {
+    // 🚀 Envoi à l'API Runway
+    const runwayRes = await fetch("https://api.runwayml.com/v1/image_to_video", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Runway-Version": "2024-11-06" // ✅ Version obligatoire
       },
       body: JSON.stringify(payload)
     });
 
-    const resultText = await runwayRes.text(); // 🔍 Affiche l'erreur lisible si échec
-    logger.info("📨 Réponse brute Runway :", resultText);
+    const result = await runwayRes.json();
 
     if (!runwayRes.ok) {
-      throw new Error("Erreur Runway : " + resultText);
+      logger.error("❌ Erreur Runway : ", result);
+      throw new Error("Erreur Runway : " + JSON.stringify(result));
     }
 
-    const runwayData = JSON.parse(resultText);
-    logger.info("✅ Réponse JSON Runway :", runwayData);
+    logger.info("✅ Réponse Runway reçue :", result);
 
-    // 📝 Enregistrement
+    // 📝 Mise à jour Firestore
     await scriptRef.update({
       status: "generating",
-      runwayJobId: runwayData.id,
+      runwayJobId: result.id || result.job_id || "unknown", // selon réponse
       generationStartedAt: new Date().toISOString()
     });
 
-    res.status(200).json({ success: true, jobId: runwayData.id });
+    res.status(200).json({
+      success: true,
+      jobId: result.id || result.job_id
+    });
 
   } catch (err) {
     logger.error("❌ Erreur generateAIVideo:", err.message);
