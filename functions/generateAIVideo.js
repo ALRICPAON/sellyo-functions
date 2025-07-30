@@ -16,79 +16,90 @@ exports.generateAIVideo = onRequest({
     const { userId, scriptId } = req.body;
     if (!userId || !scriptId) throw new Error("Paramètres manquants.");
 
-    // 🔥 1. Récupération du prompt depuis Firestore
+    // 🔥 1. Récupération des données du script
     const scriptRef = db.doc(`scripts/${userId}/items/${scriptId}`);
     const scriptSnap = await scriptRef.get();
     if (!scriptSnap.exists) throw new Error("Script introuvable.");
-
     const scriptData = scriptSnap.data();
+
     const promptUrl = scriptData.promptVideoUrl;
     if (!promptUrl) throw new Error("Aucun promptVideoUrl défini.");
 
     const promptText = await fetch(promptUrl).then(r => r.text());
     logger.info("📝 Prompt utilisé :", promptText);
 
-    // 🖼️ 2. Génération de l'image (text_to_image)
-    const imageRes = await fetch("https://api.runwayml.com/v2/generations", {
+    // 🖼️ 2. Génération de l’image avec le prompt texte
+    const imageRes = await fetch("https://api.dev.runwayml.com/v1/text_to_image", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Runway-Version": "2024-11-06"
       },
       body: JSON.stringify({
-        prompt: promptText,
-        mode: "text_to_image",
-        width: 768,
-        height: 768
+        promptText,
+        model: "gen4_image", // ← tu peux aussi tester "gen3a_turbo"
+        ratio: "1280:720",
+        seed: 1234567890,
+        contentModeration: {
+          publicFigureThreshold: "auto"
+        }
       })
     });
 
     if (!imageRes.ok) {
-      const errText = await imageRes.text();
-      throw new Error("Erreur image Runway : " + errText);
+      const errorText = await imageRes.text();
+      throw new Error("Erreur image Runway : " + errorText);
     }
 
     const imageData = await imageRes.json();
     const imageId = imageData.id;
-    logger.info("🖼️ Image générée avec ID :", imageId);
+    logger.info("🖼️ Image générée – ID :", imageId);
 
-    // 📽️ 3. Génération de la vidéo (image_to_video)
-    const videoRes = await fetch("https://api.runwayml.com/v2/generations", {
+    // ⏳ Facultatif : attendre quelques secondes pour être sûr que l’image est prête
+    await new Promise(resolve => setTimeout(resolve, 3000));
+
+    // 📽️ 3. Génération de la vidéo à partir de l’image
+    const videoRes = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
+        "X-Runway-Version": "2024-11-06"
       },
       body: JSON.stringify({
-        input: { image_id: imageId },
-        mode: "image_to_video",
-        width: 720,
-        height: 1280,
-        num_frames: 24,
-        output_format: "mp4"
+        promptImage: `https://storage.googleapis.com/runway-ml/${imageId}.png`, // ← lien public attendu
+        model: "gen3a_turbo",
+        promptText,
+        duration: 5,
+        ratio: "1280:720",
+        contentModeration: {
+          publicFigureThreshold: "auto"
+        }
       })
     });
 
     if (!videoRes.ok) {
-      const errText = await videoRes.text();
-      throw new Error("Erreur vidéo Runway : " + errText);
+      const errorText = await videoRes.text();
+      throw new Error("Erreur vidéo Runway : " + errorText);
     }
 
     const videoData = await videoRes.json();
-    logger.info("🎬 Vidéo en cours de génération. ID :", videoData.id);
+    const videoJobId = videoData.id;
+    logger.info("🎬 Vidéo générée – Job ID :", videoJobId);
 
-    // 💾 4. Sauvegarde Firestore
+    // 💾 4. Mise à jour Firestore
     await scriptRef.update({
       status: "generating",
       imageRunwayId: imageId,
-      runwayJobId: videoData.id,
+      runwayJobId: videoJobId,
       generationStartedAt: new Date().toISOString()
     });
 
     return res.status(200).json({
       success: true,
       imageId,
-      videoJobId: videoData.id
+      videoJobId
     });
 
   } catch (err) {
