@@ -73,9 +73,6 @@ exports.generateAIVideo = onRequest({
         promptText,
         duration: 5,
         ratio: "1280:720",
-        contentModeration: {
-          publicFigureThreshold: "auto"
-        }
       })
     });
 
