@@ -1,8 +1,8 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
-const admin = require("./firebase-admin-init"); // ✅ comme ta fonction qui marche
-const db = admin.firestore(); // ✅
+const admin = require("./firebase-admin-init"); // ✅ Centralisé
+const db = admin.firestore();
 
 exports.generateAIVideo = onRequest({
   cors: true,
@@ -14,43 +14,57 @@ exports.generateAIVideo = onRequest({
 
   try {
     const { userId, scriptId } = req.body;
+    logger.info("📩 Données reçues :", { userId, scriptId });
+
     if (!userId || !scriptId) throw new Error("Paramètres manquants.");
 
-    // 🔥 Récupération du script
+    // 🔥 Récupération du script depuis Firestore
     const scriptRef = db.doc(`scripts/${userId}/items/${scriptId}`);
     const scriptSnap = await scriptRef.get();
     if (!scriptSnap.exists) throw new Error("Script introuvable");
 
     const scriptData = scriptSnap.data();
     const promptUrl = scriptData.promptVideoUrl;
+    logger.info("🌐 URL du prompt :", promptUrl);
+
     if (!promptUrl) throw new Error("Aucun promptVideoUrl défini");
 
-    // 📥 Récupération du contenu texte
+    // 📥 Récupération du texte brut
     const promptText = await fetch(promptUrl).then(r => r.text());
-    logger.info("🎞️ Prompt Runway utilisé :", promptText);
+    logger.info("🧠 Prompt utilisé pour Runway :", promptText);
 
     // 📤 Appel Runway
+    const payload = {
+      prompt: promptText,
+      model: "act-two", // 🔄 assure-toi que ce modèle est bien dispo dans ton compte
+      width: 720,
+      height: 1280,
+      num_frames: 24,
+      output_format: "mp4"
+    };
+
+    logger.info("📤 Payload Runway envoyé :", payload);
+
     const runwayRes = await fetch("https://api.runwayml.com/v1/generate", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        prompt: promptText,
-        model: "act-two", // ← c’est bien celui que tu as dans ton plan
-        width: 720,
-        height: 1280,
-        num_frames: 24,
-        output_format: "mp4"
-      })
+      body: JSON.stringify(payload)
     });
 
-    if (!runwayRes.ok) throw new Error("Erreur Runway : " + runwayRes.statusText);
-    const runwayData = await runwayRes.json();
-    logger.info("✅ Réponse Runway :", runwayData);
+    const resultText = await runwayRes.text(); // 🔍 Affiche l'erreur lisible si échec
+    logger.info("📨 Réponse brute Runway :", resultText);
 
-    // ✅ Mise à jour du document script
+    if (!runwayRes.ok) {
+      throw new Error("Erreur Runway : " + resultText);
+    }
+
+    const runwayData = JSON.parse(resultText);
+    logger.info("✅ Réponse JSON Runway :", runwayData);
+
+    // 📝 Enregistrement
     await scriptRef.update({
       status: "generating",
       runwayJobId: runwayData.id,
