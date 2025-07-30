@@ -29,7 +29,7 @@ exports.generateAIVideo = onRequest({
     logger.info("📝 Prompt utilisé :", promptText);
 
     // 🖼️ 2. Génération de l'image (text_to_image)
-    const imageRes = await fetch("https://api.runwayml.com/v1/generate", {
+    const imageRes = await fetch("https://api.runwayml.com/v2/generations", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
@@ -53,7 +53,7 @@ exports.generateAIVideo = onRequest({
     logger.info("🖼️ Image générée avec ID :", imageId);
 
     // 📽️ 3. Génération de la vidéo (image_to_video)
-    const videoRes = await fetch("https://api.runwayml.com/v1/generate", {
+    const videoRes = await fetch("https://api.runwayml.com/v2/generations", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
