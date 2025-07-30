@@ -1,12 +1,10 @@
 const { onCall } = require("firebase-functions/v2/https");
 const admin = require("./firebase-admin-init");
-const { getStorage } = require("firebase-admin/storage");
 const fetch = require("node-fetch");
 
 const db = admin.firestore();
-const storage = getStorage();
 
-exports.generateImageFromPrompt = onCall(
+exports.generateAIVideo = onCall(
   {
     region: "us-central1",
     memory: "1GiB",
@@ -17,24 +15,24 @@ exports.generateImageFromPrompt = onCall(
     const { userId, scriptId } = req.data;
 
     if (!userId || !scriptId) {
-      throw new Error("Paramètres manquants");
+      throw new Error("Paramètres manquants (userId, scriptId)");
     }
 
     const docRef = db.collection("scripts").doc(userId).collection("items").doc(scriptId);
     const docSnap = await docRef.get();
-    const data = docSnap.data();
 
-    if (!data || !data.promptVideoUrl) {
-      throw new Error("Champ promptVideoUrl manquant");
+    if (!docSnap.exists) {
+      throw new Error("Document script introuvable");
     }
 
-    // 1. Lire le fichier texte depuis Storage
-    const fileRef = storage.bucket().file(data.promptVideoUrl.replace(/^https:\/\/.*\.appspot\.com\//, ""));
-    const [contentBuffer] = await fileRef.download();
-    const promptText = contentBuffer.toString("utf8");
+    const data = docSnap.data();
 
-    // 2. Appel à l'API Runway pour générer l'image
-    const response = await fetch("https://api.dev.runwayml.com/v1/text_to_image", {
+    if (!data.generatedImageUrl) {
+      throw new Error("Image non générée. Champ generatedImageUrl manquant");
+    }
+
+    // 1. Envoi vers Runway API
+    const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
@@ -42,27 +40,38 @@ exports.generateImageFromPrompt = onCall(
         "X-Runway-Version": "2024-11-06",
       },
       body: JSON.stringify({
-        promptText,
-        model: "gen4_image",
-        ratio: "1280:720",
+        input: {
+          image: data.generatedImageUrl,
+        },
+        model: "gen-3-turbo",
+        duration: 5,
         contentModeration: {
           publicFigureThreshold: "auto"
         }
-      })
+      }),
     });
 
     const json = await response.json();
-    if (!json?.id) throw new Error("Erreur Runway : aucune ID de génération");
+
+    if (!json?.id) {
+      console.error("❌ Erreur Runway : ", json);
+      throw new Error("Échec de la génération de la vidéo Runway");
+    }
 
     const runwayJobId = json.id;
 
-    // 3. Enregistrer l’ID dans Firestore (image en attente de récupération ou lien direct s’il est dispo)
+    // 2. Mise à jour Firestore
     await docRef.update({
-      imageJobId: runwayJobId,
-      imageStatus: "generating",
+      videoJobId: runwayJobId,
+      videoStatus: "generating",
       generationStartedAt: new Date().toISOString()
     });
 
-    return { success: true, runwayJobId };
+    console.log("🎥 Vidéo Runway lancée avec jobId :", runwayJobId);
+
+    return {
+      success: true,
+      runwayJobId
+    };
   }
 );
