@@ -37,14 +37,14 @@ exports.generateAIVideo = onRequest({
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
         "Content-Type": "application/json"
       },
-      body: JSON.stringify({
-        prompt: promptText,
-        model: "gen-2", // ← À ajuster si nécessaire selon ton plan
-        width: 512,
-        height: 288,
-        num_frames: 24,
-        output_format: "mp4"
-      })
+     body: JSON.stringify({
+  prompt: promptText,
+  model: "gen-2",
+  width: 720,
+  height: 1280,
+  num_frames: 24,
+  output_format: "mp4"
+})
     });
 
     if (!runwayRes.ok) throw new Error("Erreur Runway : " + runwayRes.statusText);
