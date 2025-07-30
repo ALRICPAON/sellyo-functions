@@ -1,10 +1,8 @@
 const { onRequest } = require("firebase-functions/v2/https");
 const { getFirestore, doc, getDoc, updateDoc } = require("firebase-admin/firestore");
-const { initializeApp, applicationDefault } = require("firebase-admin/app");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
 
-initializeApp({ credential: applicationDefault() });
 const db = getFirestore();
 
 exports.generateAIVideo = onRequest({
