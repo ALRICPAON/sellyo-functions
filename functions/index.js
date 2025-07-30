@@ -8,6 +8,7 @@ const { checkMailerSendDomainStatus } = require("./checkMailerSendDomainStatus")
 const { createCustomDomainNetlify } = require("./createCustomDomainNetlify");
 const { modifyScript } = require("./modifyScript");
 const { generateAIVideo } = require("./generateAIVideo");
+const { generateImageFromPrompt } = require("./generateImageFromPrompt");
 
 
 
@@ -21,3 +22,5 @@ exports.checkMailerSendDomainStatus = checkMailerSendDomainStatus;
 exports.createCustomDomainNetlify = createCustomDomainNetlify;
 exports.modifyScript = modifyScript;
 exports.generateAIVideo = generateAIVideo;
+exports.generateImageFromPrompt = generateImageFromPrompt;
+
