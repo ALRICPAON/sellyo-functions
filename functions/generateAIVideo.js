@@ -1,9 +1,9 @@
 const { onRequest } = require("firebase-functions/v2/https");
-const { getFirestore, doc, getDoc, updateDoc } = require("firebase-admin/firestore");
+const { db } = require("./firebase-admin-init"); // ✅ Correct
+const { doc, getDoc, updateDoc } = require("firebase-admin/firestore");
 const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
 
-const db = getFirestore();
 
 exports.generateAIVideo = onRequest({
   cors: true,
