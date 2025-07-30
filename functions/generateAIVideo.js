@@ -38,7 +38,7 @@ exports.generateAIVideo = onRequest({
       },
       body: JSON.stringify({
         prompt: promptText,
-        model: "gen-2",
+        model: "act-two", // ← c’est bien celui que tu as dans ton plan
         width: 720,
         height: 1280,
         num_frames: 24,
