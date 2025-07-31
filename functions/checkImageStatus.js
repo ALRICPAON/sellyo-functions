@@ -50,19 +50,33 @@ exports.checkImageStatus = onSchedule(
 
           const jobData = await res.json();
 
-          if (jobData.status === "succeeded" && jobData.output?.[0]?.url) {
-            await docRef.update({
-              imageStatus: "ready",
-              generatedImageUrl: jobData.output[0].url,
-              imageCompletedAt: new Date().toISOString()
-            });
-            logger.info(`✅ Image prête pour ${doc.id} – URL : ${jobData.output[0].url}`);
-          } else if (jobData.status === "failed") {
-            await docRef.update({ imageStatus: "failed" });
-            logger.error(`❌ Échec génération pour ${doc.id}`);
-          } else {
-            logger.info(`⏳ Job ${doc.id} toujours en cours (statut: ${jobData.status})`);
-          }
+         if (jobData.status === "succeeded" && jobData.output?.[0]?.url) {
+  logger.info(`➡️ Tentative d'update pour ${doc.id} avec status "ready"`);
+
+  try {
+    await docRef.update({
+      imageStatus: "ready",
+      generatedImageUrl: jobData.output[0].url,
+      imageCompletedAt: new Date().toISOString()
+    });
+    logger.info(`✅ Image prête pour ${doc.id} – URL : ${jobData.output[0].url}`);
+  } catch (updateErr) {
+    logger.error(`❌ Erreur update Firestore (ready) pour ${doc.id} : ${updateErr.message}`);
+  }
+
+} else if (jobData.status === "failed") {
+  logger.info(`➡️ Tentative d'update pour ${doc.id} avec status "failed"`);
+
+  try {
+    await docRef.update({ imageStatus: "failed" });
+    logger.info(`⚠️ Statut mis à "failed" pour ${doc.id}`);
+  } catch (updateErr) {
+    logger.error(`❌ Erreur update Firestore (failed) pour ${doc.id} : ${updateErr.message}`);
+  }
+
+} else {
+  logger.info(`⏳ Job ${doc.id} toujours en cours (statut: ${jobData.status})`);
+}
         } catch (innerErr) {
           logger.error(`💥 Erreur API Runway pour ${doc.id} : ${innerErr.message}`);
         }
