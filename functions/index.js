@@ -9,8 +9,7 @@ const { createCustomDomainNetlify } = require("./createCustomDomainNetlify");
 const { modifyScript } = require("./modifyScript");
 const { generateAIVideo } = require("./generateAIVideo");
 const { generateImageFromPrompt } = require("./generateImageFromPrompt");
-
-
+const { checkImageStatus } = require("./checkImageStatus");
 
 exports.sendEmailOnReady = sendEmailOnReady;
 exports.checkScheduledEmails = checkScheduledEmails;
@@ -23,4 +22,6 @@ exports.createCustomDomainNetlify = createCustomDomainNetlify;
 exports.modifyScript = modifyScript;
 exports.generateAIVideo = generateAIVideo;
 exports.generateImageFromPrompt = generateImageFromPrompt;
+exports.checkImageStatus = checkImageStatus;
+
 

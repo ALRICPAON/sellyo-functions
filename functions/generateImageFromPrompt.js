@@ -4,7 +4,7 @@ const fetch = require("node-fetch");
 
 const db = admin.firestore();
 
-exports.generateAIVideo = onCall(
+exports.generateImageFromPrompt = onCall(
   {
     region: "us-central1",
     memory: "1GiB",
@@ -15,24 +15,37 @@ exports.generateAIVideo = onCall(
     const { userId, scriptId } = req.data;
 
     if (!userId || !scriptId) {
-      throw new Error("Paramètres manquants (userId, scriptId)");
+      throw new Error("Paramètres manquants");
     }
 
     const docRef = db.collection("scripts").doc(userId).collection("items").doc(scriptId);
     const docSnap = await docRef.get();
 
     if (!docSnap.exists) {
-      throw new Error("Document script introuvable");
+      throw new Error("Script introuvable");
     }
 
     const data = docSnap.data();
 
-    if (!data.generatedImageUrl) {
-      throw new Error("Image non générée. Champ generatedImageUrl manquant");
+    if (!data.promptVideoUrl) {
+      throw new Error("Champ promptVideoUrl manquant");
     }
 
-    // 1. Envoi vers Runway API
-    const response = await fetch("https://api.dev.runwayml.com/v1/image_to_video", {
+    // ✅ Étape 1 : Télécharger le texte du prompt
+    const responseTxt = await fetch(data.promptVideoUrl);
+    if (!responseTxt.ok) {
+      throw new Error("Échec de téléchargement du fichier prompt");
+    }
+
+    const textPrompt = await responseTxt.text();
+    console.log("🧠 Prompt texte téléchargé :", textPrompt);
+
+    if (!textPrompt || textPrompt.length < 5) {
+      throw new Error("Contenu du prompt texte vide ou invalide");
+    }
+
+    // ✅ Étape 2 : Appel à Runway pour générer l'image
+    const response = await fetch("https://api.dev.runwayml.com/v1/text_to_image", {
       method: "POST",
       headers: {
         "Authorization": `Bearer ${process.env.RUNWAY_API_KEY}`,
@@ -40,11 +53,10 @@ exports.generateAIVideo = onCall(
         "X-Runway-Version": "2024-11-06",
       },
       body: JSON.stringify({
-        input: {
-          image: data.generatedImageUrl,
-        },
-        model: "gen-3-turbo",
-        duration: 5,
+        promptText: textPrompt,
+        model: "gen4_image",
+        ratio: "1280:720",
+        seed: 1234567890,
         contentModeration: {
           publicFigureThreshold: "auto"
         }
@@ -54,24 +66,21 @@ exports.generateAIVideo = onCall(
     const json = await response.json();
 
     if (!json?.id) {
-      console.error("❌ Erreur Runway : ", json);
-      throw new Error("Échec de la génération de la vidéo Runway");
+      console.error("❌ Erreur API Runway :", json);
+      throw new Error("Échec génération image IA (pas de job ID)");
     }
 
-    const runwayJobId = json.id;
-
-    // 2. Mise à jour Firestore
+    // 🕐 Mise à jour Firestore avec le Job ID
     await docRef.update({
-      videoJobId: runwayJobId,
-      videoStatus: "generating",
-      generationStartedAt: new Date().toISOString()
+      imageStatus: "generating",
+      runwayJobId: json.id,
+      imageRequestedAt: new Date().toISOString()
     });
-
-    console.log("🎥 Vidéo Runway lancée avec jobId :", runwayJobId);
 
     return {
       success: true,
-      runwayJobId
+      runwayJobId: json.id,
+      message: "Image en cours de génération"
     };
   }
 );
