@@ -1,6 +1,6 @@
-const functions = require("firebase-functions/v2"); // ✅ utile si tu veux utiliser functions.logger
+const functions = require("firebase-functions/v2");
 const { onSchedule } = require("firebase-functions/v2/scheduler");
-const logger = require("firebase-functions/logger"); // ✅ import correct du logger
+const logger = require("firebase-functions/logger");
 const fetch = require("node-fetch");
 const admin = require("./firebase-admin-init");
 
@@ -16,7 +16,7 @@ exports.checkImageStatus = onSchedule(
   },
   async () => {
     try {
-      logger.info("⏱️ Début vérification des images IA en attente...");
+      logger.info("⏱️ Début de la vérification des images IA en attente...");
 
       const snapshot = await db
         .collectionGroup("items")
@@ -24,20 +24,25 @@ exports.checkImageStatus = onSchedule(
         .get();
 
       if (snapshot.empty) {
-        logger.info("✅ Aucun job d'image en attente");
+        logger.info("✅ Aucun job d'image en attente.");
         return;
       }
 
-      logger.info(`📦 ${snapshot.size} images à vérifier...`);
+      logger.info(`📦 ${snapshot.size} documents à vérifier.`);
 
       for (const doc of snapshot.docs) {
         const data = doc.data();
         const docRef = doc.ref;
 
+        logger.info(`📝 Doc ID : ${doc.id}`);
+        logger.info(`📁 Chemin Firestore : ${docRef.path}`);
+
         if (!data.runwayJobId) {
           logger.warn(`⚠️ Pas de runwayJobId pour ${doc.id}, skip.`);
           continue;
         }
+
+        logger.info(`🛠️ Job ID Runway : ${data.runwayJobId}`);
 
         try {
           const res = await fetch(`https://api.dev.runwayml.com/v1/jobs/${data.runwayJobId}`, {
@@ -49,41 +54,48 @@ exports.checkImageStatus = onSchedule(
           });
 
           const jobData = await res.json();
+          logger.info(`📬 jobData.status : ${jobData.status}`);
+          logger.info(`📬 jobData complet : ${JSON.stringify(jobData)}`);
 
-         if (jobData.status === "succeeded" && jobData.output?.[0]?.url) {
-  logger.info(`➡️ Tentative d'update pour ${doc.id} avec status "ready"`);
+          if (jobData.status === "succeeded" && jobData.output?.[0]?.url) {
+            logger.info(`✅ Image générée avec succès : ${jobData.output[0].url}`);
 
-  try {
-    await docRef.update({
-      imageStatus: "ready",
-      generatedImageUrl: jobData.output[0].url,
-      imageCompletedAt: new Date().toISOString()
-    });
-    logger.info(`✅ Image prête pour ${doc.id} – URL : ${jobData.output[0].url}`);
-  } catch (updateErr) {
-    logger.error(`❌ Erreur update Firestore (ready) pour ${doc.id} : ${updateErr.message}`);
-  }
+            try {
+              await docRef.update({
+                imageStatus: "ready",
+                generatedImageUrl: jobData.output[0].url,
+                imageCompletedAt: new Date().toISOString()
+              });
+              logger.info(`📥 Mise à jour Firestore réussie pour ${doc.id}`);
+            } catch (updateErr) {
+              logger.error(`❌ Erreur Firestore UPDATE (ready) pour ${doc.id} : ${updateErr.message}`);
+              logger.error(`🔍 Stack : ${updateErr.stack}`);
+            }
 
-} else if (jobData.status === "failed") {
-  logger.info(`➡️ Tentative d'update pour ${doc.id} avec status "failed"`);
+          } else if (jobData.status === "failed") {
+            logger.warn(`⛔ Job Runway échoué pour ${doc.id}`);
 
-  try {
-    await docRef.update({ imageStatus: "failed" });
-    logger.info(`⚠️ Statut mis à "failed" pour ${doc.id}`);
-  } catch (updateErr) {
-    logger.error(`❌ Erreur update Firestore (failed) pour ${doc.id} : ${updateErr.message}`);
-  }
+            try {
+              await docRef.update({ imageStatus: "failed" });
+              logger.info(`📥 Statut mis à "failed" pour ${doc.id}`);
+            } catch (updateErr) {
+              logger.error(`❌ Erreur Firestore UPDATE (failed) pour ${doc.id} : ${updateErr.message}`);
+              logger.error(`🔍 Stack : ${updateErr.stack}`);
+            }
 
-} else {
-  logger.info(`⏳ Job ${doc.id} toujours en cours (statut: ${jobData.status})`);
-}
-        } catch (innerErr) {
-          logger.error(`💥 Erreur API Runway pour ${doc.id} : ${innerErr.message}`);
+          } else {
+            logger.info(`⏳ Job ${doc.id} toujours en cours (statut: ${jobData.status})`);
+          }
+
+        } catch (apiErr) {
+          logger.error(`💥 Erreur lors de l'appel API Runway pour ${doc.id} : ${apiErr.message}`);
+          logger.error(`🔍 Stack : ${apiErr.stack}`);
         }
       }
 
     } catch (outerErr) {
       logger.error(`🔥 Erreur globale dans checkImageStatus : ${outerErr.message}`);
+      logger.error(`🔍 Stack : ${outerErr.stack}`);
     }
   }
 );
